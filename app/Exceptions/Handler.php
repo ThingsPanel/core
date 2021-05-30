@@ -79,7 +79,7 @@ class Handler extends ExceptionHandler
                 if (config('app.debug')) {
                     return parent::render($request, $exception);
                 } else {
-                    return response()->view('core::errors.500', [], 500);
+                    return response()->view('500', [], 500);
                 }
         }
     }
