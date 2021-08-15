@@ -59,6 +59,15 @@ class TcpServer extends Command
 
         //listen 127.0.0.1:9505
         $this->server = new Server('0.0.0.0', 9505);
+        if (config('servers.tcp_pack_enable')) {
+            $this->server->set([
+                'open_length_check' => true,
+                'package_max_length' => 81920,
+                'package_length_type' => 'n',
+                'package_length_offset' => 0,
+                'package_body_offset' => 2
+            ]);
+        }
 
         //connecting
         $this->server->on('Connect', function ($server, $fd) {
@@ -68,6 +77,16 @@ class TcpServer extends Command
         //receive message
         $this->server->on('Receive', function ($server, $fd, $from_id, $data) use ($channel) {
             Log::info("telemetry:tcp_server Receive: " . $data, ['fd' => $fd]);
+
+            //TCP分包粘包问题
+            if (config('servers.tcp_pack_enable')) {
+                /**
+                 * C语言需要在上行字符前面加2个字节 sprintf(newstring, "%2c", strlen(body))
+                 * PHP语言需要在上行字符前面加2个字节 pack('n',strlen($body))
+                 */
+                $data = strchr($data, '{');
+                Log::info("telemetry:tcp_server after filter: " . $data);
+            }
 
             $dataArray = json_decode($data, true);
 

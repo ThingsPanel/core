@@ -60,13 +60,27 @@ class Kv extends Base
         if ($device_id && !empty($values)) {
             $data = [];
             foreach ($values as $key => $val) {
-                $data[] = [
-                    'entity_type' => 'DEVICE',
-                    'entity_id' => $device_id, //device_id
-                    'key' => $key,
-                    'ts' => $ts,
-                    'dbl_v' => $val
-                ];
+                if (is_numeric($val)) {
+                    $data[] = [
+                        'entity_type' => 'DEVICE',
+                        'entity_id' => $device_id, //device_id
+                        'key' => $key,
+                        'ts' => $ts,
+                        'dbl_v' => $val
+                    ];
+
+                    DB::table('ts_kv_latest')->updateOrInsert(
+                        [
+                            'entity_type' => 'DEVICE',
+                            'entity_id' => $device_id,
+                            'key' => $key
+                        ],
+                        [
+                            'ts' => $ts,
+                            'dbl_v' => $val
+                        ]
+                    );
+                }
             }
             DB::table('ts_kv')->insert($data);
 
